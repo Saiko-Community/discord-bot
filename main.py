@@ -9,6 +9,7 @@ bot = loader.bot
 
 async def load_features():
 	bot.load_extension("features.ping.handlers")
+	bot.load_extension("features.message_sender.handlers")
 	# Добавлять новые фичи сюда
 
 @bot.event
