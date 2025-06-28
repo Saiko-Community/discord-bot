@@ -1,13 +1,11 @@
 import disnake
 from disnake.ext import commands
-from .service import PingService
 
+from .service import PingService
+from loader import bot
 
 def setup(bot):
-    @commands.slash_command(
-        name="пинг",
-        description="Проверить скорость ответа бота"
-    )
-    async def ping_command(self, inter: disnake.CommandInteraction):
-        embed = await PingService.get_ping_embed()
-        await inter.response.send_message(embed=embed)
+  @bot.slash_command(name="пинг", description="Проверить скорость ответа бота")
+  async def ping(inter: disnake.CommandInteraction):
+    embed = await PingService.get_ping_embed()
+    await inter.response.send_message(embed=embed)
