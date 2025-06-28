@@ -70,20 +70,14 @@ class MessageSenderService:
 				if not name:
 					continue
 
-				if "initial_message" in thread_data:
-					message = await channel.send(thread_data["initial_message"])
-					thread = await message.create_thread(
-						name=name,
-						auto_archive_duration=thread_data.get("auto_archive", 1440),
-						reason="Автоматическое создание ветки из шаблона"
-				    )
-				else:
-					thread = await channel.create_thread(
-						name=name,
-						auto_archive_duration=thread_data.get("auto_archive", 1440),
-						reason="Автоматическое создание ветки из шаблона",
-						type=disnake.ChannelType.public_thread
-					)
+				# Создаем ветку без сообщения инициализации
+				thread = await channel.create_thread(
+					name=name,
+					auto_archive_duration=thread_data.get("auto_archive", 1440),
+					reason="Автоматическое создание ветки из шаблона",
+					type=disnake.ChannelType.public_thread,
+					invitable=thread_data.get("invitable", True)
+				)
 
 				created_threads[name] = thread
 			except Exception as e:
@@ -140,7 +134,7 @@ class MessageSenderService:
 		components = []
 		if "buttons" in data or "threads" in data:
 			action_row = disnake.ui.ActionRow()
-			
+
 			# Кнопки из шаблона
 			for btn_data in data.get("buttons", []):
 				btn = disnake.ui.Button(
@@ -151,45 +145,47 @@ class MessageSenderService:
 					disabled=btn_data.get("disabled", False)
 				)
 				action_row.append_item(btn)
-			
-			# Кнопки для веток
-			for thread_name, thread in threads.items():
-				btn = disnake.ui.Button(
-					style=ButtonStyle.blurple,
-					label=thread_name,
-					url=thread.jump_url,
-					emoji=data.get("threads_emoji", "🧵")
-				)
-				action_row.append_item(btn)
-			
+
+			# Кнопки для веток с индивидуальными эмодзи
+			for thread_data in data.get("threads", []):
+				thread_name = thread_data.get("name")
+				if thread_name in threads:
+					btn = disnake.ui.Button(
+						style=ButtonStyle.blurple,
+						label=thread_name,
+						url=threads[thread_name].jump_url,
+						emoji=thread_data.get("emoji", "🧵")
+					)
+					action_row.append_item(btn)
+
 			if action_row.children:
 				components.append(action_row)
 
-		# Попытка обновить существующ1ее сообщение
+		# Попытка обновить существующее сообщение
 		message_id = data.get("message_id")
 		if message_id:
-			try:
-				message = await target_channel.fetch_message(message_id)
-				await message.edit(
-					content=data.get("content"),
-					embeds=[disnake.Embed.from_dict(e) for e in data.get("embeds", [])],
-					components=components
-				)
-				self.logger.info(f"Message updated in {target_channel.id}")
-				return message
-			except disnake.NotFound:
-				self.logger.info("Message not found, sending new one")
-			except Exception as e:
-				self.logger.error(f"Failed to edit message: {str(e)}")
+		    try:
+		        message = await target_channel.fetch_message(message_id)
+		        await message.edit(
+		            content=data.get("content"),
+		            embeds=[disnake.Embed.from_dict(e) for e in data.get("embeds", [])],
+		            components=components
+		        )
+		        self.logger.info(f"Message updated in {target_channel.id}")
+		        return message
+		    except disnake.NotFound:
+		        self.logger.info("Message not found, sending new one")
+		    except Exception as e:
+		        self.logger.error(f"Failed to edit message: {str(e)}")
 
 		# Отправка нового сообщения
 		try:
-			return await target_channel.send(
-				content=data.get("content"),
-				embeds=[disnake.Embed.from_dict(e) for e in data.get("embeds", [])],
-				files=files if files else None,
-				components=components
-			)
+		    return await target_channel.send(
+		        content=data.get("content"),
+		        embeds=[disnake.Embed.from_dict(e) for e in data.get("embeds", [])],
+		        files=files if files else None,
+		        components=components
+		    )
 		except Exception as e:
-			self.logger.error(f"Failed to send message: {str(e)}")
-			return None
+		    self.logger.error(f"Failed to send message: {str(e)}")
+		    return None
