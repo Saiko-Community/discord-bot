@@ -8,8 +8,14 @@ import loader
 bot = loader.bot
 
 async def load_features():
+
+	await database.setup()
+	print("База данных загружена")
+
 	bot.load_extension("features.ping.handlers")
 	bot.load_extension("features.message_sender.handlers")
+	bot.load_extension("features.member_tracking.handlers")
+	print("Фичи загружены")
 	# Добавлять новые фичи сюда
 
 @bot.event
