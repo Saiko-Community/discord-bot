@@ -12,3 +12,8 @@ wheels/
 # Secret files
 .env
 *.db
+
+# Dev files
+.gptree_config
+gptree_output.txt
+uv.lock
