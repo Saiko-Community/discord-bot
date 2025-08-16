@@ -40,6 +40,7 @@ def setup(bot: commands.Bot):
 
 	
 	@bot.slash_command(name="update_messages", description="Обновить все сообщения из шаблонов")
+	@commands.has_permissions(administrator=True)
 	async def update_messages(inter: disnake.ApplicationCommandInteraction):
 		"""Команда для ручного обновления всех сообщений"""
 		await handlers.initialize()
@@ -49,6 +50,7 @@ def setup(bot: commands.Bot):
 		)
 	
 	@bot.slash_command(name="send_message", description="Отправить сообщение из шаблона")
+	@commands.has_permissions(administrator=True)
 	async def send_message(
 		inter: disnake.ApplicationCommandInteraction,
 		template_name: str,

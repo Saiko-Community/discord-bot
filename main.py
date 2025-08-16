@@ -12,9 +12,10 @@ async def load_features():
 	await database.setup()
 	print("База данных загружена")
 
-	bot.load_extension("features.ping.handlers")
-	bot.load_extension("features.message_sender.handlers")
-	bot.load_extension("features.member_tracking.handlers")
+	bot.load_extension("features.ping.handlers")					# Команда /ping
+	bot.load_extension("features.message_sender.handlers")			# Отправка системных сообщений через шаблоны
+	bot.load_extension("features.invite_tracking.handlers")			# Трекинг инвайтов
+	bot.load_extension("features.activity_tracking.handlers")		# Трекинг активности участников
 	print("Фичи загружены")
 	# Добавлять новые фичи сюда
 
