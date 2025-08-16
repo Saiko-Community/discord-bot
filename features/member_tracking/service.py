@@ -34,10 +34,13 @@ class MemberTrackingService:
         self.invite_cache[guild.id] = {invite.code: invite.uses for invite in await guild.invites()}
     
     async def add_member(self, member, inviter_id=None, invite_code=None):
-        """Добавляет участника в базу данных"""
+        """Добавляет участника в базе данных"""
         session = Session()
         try:
-            if not session.query(User).filter_by(discord_id=str(member.id)).first():
+            user = session.query(User).filter_by(discord_id=str(member.id)).first()
+            
+            if not user:
+                # Создание нового участника
                 new_user = User(
                     discord_id=str(member.id),
                     joined_at=int(time.time()),
@@ -47,7 +50,14 @@ class MemberTrackingService:
                     xp=0
                 )
                 session.add(new_user)
-                session.commit()
+            else:
+                # Обновление инвайт кода
+                if inviter_id is not None:
+                    user.invited_by = inviter_id
+                if invite_code is not None:
+                    user.invite_code = invite_code
+            
+            session.commit()
         finally:
             session.close()
     
@@ -64,7 +74,6 @@ class MemberTrackingService:
                         joined_at=int(time.time()),
                         messages=0,
                         xp=0
-                        # level вычисляется автоматически
                     )
                     session.add(new_user)
             

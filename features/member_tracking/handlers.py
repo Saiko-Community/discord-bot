@@ -47,7 +47,7 @@ def setup(bot):
 
     @bot.event
     async def on_message(message):
-        # Игнорируем сообщения ботов и системные сообщения
+        # Игнор ботов
         if message.author.bot or not message.guild:
             return
             
