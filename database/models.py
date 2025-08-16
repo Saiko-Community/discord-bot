@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, BigInteger, String, DateTime, ForeignKey, Computed
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
@@ -9,7 +9,9 @@ class User(Base):
 	
 	id = Column(Integer, primary_key=True)
 	discord_id = Column(String(255), unique=True)
-	username = Column(String(255))
-	joined_at = Column(DateTime, default=datetime.utcnow)
+	joined_at = Column(BigInteger)  # Unix timestamp
 	invited_by = Column(String(255), nullable=True)
 	invite_code = Column(String(255), nullable=True)
+	messages = Column(Integer, default=0)
+	xp = Column(Integer, default=0)
+	level = Column(Integer, Computed("ROUND(xp / 25)"))

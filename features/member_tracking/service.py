@@ -1,7 +1,7 @@
 import disnake
+import time
 from database.database import Session
 from database.models import User
-from datetime import datetime
 
 class MemberTrackingService:
     def __init__(self, bot):
@@ -40,10 +40,11 @@ class MemberTrackingService:
             if not session.query(User).filter_by(discord_id=str(member.id)).first():
                 new_user = User(
                     discord_id=str(member.id),
-                    username=member.name,
-                    joined_at=member.joined_at or datetime.utcnow(),
+                    joined_at=int(time.time()),
                     invited_by=inviter_id,
-                    invite_code=invite_code
+                    invite_code=invite_code,
+                    messages=0,
+                    xp=0
                 )
                 session.add(new_user)
                 session.commit()
@@ -60,11 +61,51 @@ class MemberTrackingService:
                 if str(member.id) not in db_members:
                     new_user = User(
                         discord_id=str(member.id),
-                        username=member.name,
-                        joined_at=member.joined_at or datetime.utcnow()
+                        joined_at=int(time.time()),
+                        messages=0,
+                        xp=0
+                        # level вычисляется автоматически
                     )
                     session.add(new_user)
             
             session.commit()
+        finally:
+            session.close()
+    
+    async def add_xp(self, user_id: str, xp_amount: int):
+        """Добавляет XP пользователю (уровень обновится автоматически)"""
+        session = Session()
+        try:
+            user = session.query(User).filter_by(discord_id=user_id).first()
+            if user:
+                user.xp += xp_amount
+                session.commit()
+        finally:
+            session.close()
+    
+    async def increment_messages(self, user_id: str):
+        """Увеличивает счётчик сообщений пользователя"""
+        session = Session()
+        try:
+            user = session.query(User).filter_by(discord_id=user_id).first()
+            if user:
+                user.messages += 1
+                session.commit()
+        finally:
+            session.close()
+    
+    async def get_user_stats(self, user_id: str):
+        """Получает статистику пользователя"""
+        session = Session()
+        try:
+            user = session.query(User).filter_by(discord_id=user_id).first()
+            if user:
+                return {
+                    'messages': user.messages,
+                    'xp': user.xp,
+                    'level': user.level,
+                    'joined_at': user.joined_at
+                }
+            return None
         finally:
             session.close()
